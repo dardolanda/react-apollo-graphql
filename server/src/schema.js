@@ -49,13 +49,39 @@ type Auth {
   errors: [Error]
 }
 
+type FlyId {
+	name_origin :String
+	name_destiny:String
+}
+
+type Flies {
+	FlyInit : [Fly]
+}
+
+type Fly {
+   fly_number:Int
+   fly_id: FlyId
+   name : String
+   description:String
+}
+
+input FlyListQueryInput {
+	from : String
+	to : String
+}
+
+
+
 # This type specifies the entry points into our API
 type Query {
   channels: [Channel]    # "[]" means this is a list of channels
   channel(name: String!): Channel
   getUser(id: ID!): User 
   getRole(id: ID!): Role
+  getFly(params : FlyListQueryInput): [Fly]
 }
+
+
 
 # The mutation root type, used to define all mutations
 type Mutation {

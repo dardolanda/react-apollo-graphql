@@ -8,6 +8,7 @@ import { SubscriptionManager } from 'graphql-subscriptions';
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 
+import grpc from 'grpc'
 import { schema } from './src/schema';
 import pubsub from './pubsub'
 
@@ -19,11 +20,17 @@ const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'Connection error:'));
 db.once('open', () => console.log('We are connected!'));
 
+
+
+
 // creamos una función asíncrona autoejecutable para poder usar Async/Await
 (async () => {
 	// creamos una aplicación de express y un servidor HTTP apartir de esta
 	const app = express();
 	const server = createServer(app);
+
+	const protoChannel = grpc.load('./channel.proto').channel;
+	const ChannelService = new protoChannel.Channel(`${process.env.GRPC_HOST}:${process.env.GRPC_PORT}`, grpc.credentials.createInsecure())
 
 	// usamos 3 los middlewares que importamos
 	app.use(cors());
@@ -50,6 +57,27 @@ db.once('open', () => console.log('We are connected!'));
 	// definimos la URL `/graphql` que usa los middlewares `body-parser` y el `graphqlExpress`
 	// usando el esquema ejecutable que creamos
 	app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }));
+
+
+	app.use('/stream' , bodyParser.json() , (req, res, next)=> {
+		console.log("Inti stream...")
+		res.writeHead(200, {
+			'Content-Type': 'text/event-stream',
+			'Cache-Control': 'no-cache',
+			'Connection': 'keep-alive'
+		});
+		console.log("writed head")
+
+		var call = ChannelService.streamTest('st')
+
+		console.log("call -->  ", call)
+
+		call.on('data', function (item) {
+			console.log("data CALL_ON : ITEM")
+			res.write("data: " + JSON.stringify(item) + "\n\n");
+			// pubsub.publish({ 'channel': 'channelAdded', channelAdded: item });
+		});
+	})
 
 	// si no estamos en producción
 	if (process.env.NODE_ENV !== 'production') {

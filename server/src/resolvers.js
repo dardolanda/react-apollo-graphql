@@ -14,7 +14,7 @@ var proto = grpc.load(PROTO_PATH);
 import dotenv from 'dotenv'
 dotenv.config({ path: '.env'})
 
-var client = new proto.helloworld.Greeter(`${process.env.GRPC_HOST}:${process.env.GRPC_PORT}`, grpc.credentials.createInsecure());
+var client = new proto.flyguide.FlyGuide('localhost:10000', grpc.credentials.createInsecure());
 
 import grpcPromise from 'grpc-promise';
 grpcPromise.promisifyAll(client);
@@ -28,13 +28,53 @@ export const resolvers = {
 			// 	});
 			// })
 
-			return client.sayHello().sendMessage({ name: "user" }).then( response => {
+/*
+			console.log("Channels not use")
+			return client.GetFeature().sendMessage({
+				latitude : 408122808 ,
+				longitude: -743999179
+			}).then( response => {
+
+				response.message = response
+				console.log("response --> Message --> " , response.message)
+
 				return JSON.parse(response && response.message) || []
 			})
 			.catch( err => { return []})
-			
-			// return Channel.find({}).then((response) => { return response });
+*/
+
+			return Channel.find({}).then((response) => { return response });
 		},
+
+		getFly: (root, inv ) => {
+
+			console.log("inv -->" , inv)
+			console.log("root  -->" , root)
+/*			var fly = {}
+			fly.name_origin = "buenos aires"
+			fly.name_destiny = "mexico"
+			var call = client.getFly(fly)
+			console.log("call on --> " , call.on )
+			return call.on('readable' , function (fly_each) {
+				return fly_each
+			})*/
+
+
+			return client.GetFly().sendMessage({
+				name_origin: inv.params != null ?  inv.params.from : '',
+				name_destiny : inv.params != null ?  inv.params.to : ''
+			}).then( response => {
+				console.log("response --> Flies --> " , response.flies)
+
+				return response.flies
+			})
+				.catch( err => { return []})
+
+				//return []
+		}
+		,
+
+
 		channel: (root, { name }) => {
 			return Channel.findOne({ name }).then((response) => response);
 		},

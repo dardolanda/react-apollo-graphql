@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package channel;
+
+service Channel {
+  rpc getAll(GetAllRequest) returns (GetAllResponse) {}
+  rpc prueba(GetAllRequest) returns (stream Item) {}
+  rpc streamTest(GetAllRequest) returns (stream Item) {}
+}
+
+message GetAllRequest { 
+	string token = 1;
+}
+
+message GetAllResponse {
+    repeated Item items = 1;
+}
+
+message Item {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+}
